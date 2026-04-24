@@ -218,3 +218,13 @@ THINGS TO KEEP IN MIND
    both. Mechanisms can be used to avoid that, however the politeness limits
    still apply and will be checked.
 6. Do not attempt to download the links directly from ics servers.
+
+TMUX - persistent terminal so crawler doesn't die
+`tmux new -s name`
+`tmux ls`
+`tmux attach -t name`
+`tmux kill-session -t name`
+
+Additional note: When using openlab you might log into larryl10@circinus-10 one time 
+and larryl10@circinus-3 another time. If you can't find your tmux session this may 
+be why
