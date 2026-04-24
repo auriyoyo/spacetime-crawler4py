@@ -1,9 +1,12 @@
 import re
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urljoin, urlunparse
+from bs4 import BeautifulSoup
+
 
 def scraper(url, resp):
     links = extract_next_links(url, resp)
     return [link for link in links if is_valid(link)]
+
 
 def extract_next_links(url, resp):
     # Implementation required.
@@ -24,8 +27,24 @@ def extract_next_links(url, resp):
         return []
 
     # 2. Parse the HTML content and extract links using BeautifulSoup
+    soup = BeautifulSoup(resp.raw_response.content, "lxml")
+    links = []
 
-    return []
+    for tag in soup.find_all("a", href=True):
+        href = tag["href"]
+
+        # 3. Convert relative URLs to absolute URLs
+        absolute = urljoin(url, href)
+
+        # 4. Strip the fragment identifier (the part after '#') from the URL
+        parsed = urlparse(absolute)
+        defragmented = urlunparse(parsed._replace(fragment=""))
+
+        links.append(defragmented)
+    
+    # 5. Return the list of links
+    return links
+
 
 def is_valid(url):
     # Decide whether to crawl this url or not. 
@@ -52,5 +71,5 @@ def is_valid(url):
             + r"|rm|smil|wmv|swf|wma|zip|rar|gz)$", parsed.path.lower())
 
     except TypeError:
-        print ("TypeError for ", parsed)
+        print("TypeError for ", parsed)
         raise
