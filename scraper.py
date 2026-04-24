@@ -15,7 +15,17 @@ def extract_next_links(url, resp):
     #         resp.raw_response.url: the url, again
     #         resp.raw_response.content: the content of the page!
     # Return a list with the hyperlinks (as strings) scrapped from resp.raw_response.content
-    return list()
+
+    # 1. Check if the response is actually valid before trying to extract links
+    if resp.status != 200 or not resp.raw_response or not resp.raw_response.content:
+        # If the status is not 200, print the error message to allow error checking on our side.
+        if resp.error:
+            print(f"Error crawling {url}: {resp.error}")
+        return []
+
+    # 2. Parse the HTML content and extract links using BeautifulSoup
+
+    return []
 
 def is_valid(url):
     # Decide whether to crawl this url or not. 
