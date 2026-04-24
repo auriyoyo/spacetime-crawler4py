@@ -60,6 +60,17 @@ def is_valid(url):
         if not any(parsed.netloc.endswith(domain) for domain in [".ics.uci.edu", ".cs.uci.edu", ".informatics.uci.edu", ".stat.uci.edu"]):
             return False
 
+        # Avoiding large files with low information value
+        for ml_dataset in ["/datasets/", "/dataset/", "/ml/"]:
+            if parsed.path.startswith(ml_dataset):
+                return False
+
+        # Avoiding infinite traps
+        if parsed.path.startswith("/events/") or parsed.path.startswith("/calendar/"):
+            return False 
+            #can also check if it ends with a date if necessary, but seems to always start with /events/
+ 
+
         return not re.match(
             r".*\.(css|js|bmp|gif|jpe?g|ico"
             + r"|png|tiff?|mid|mp2|mp3|mp4"

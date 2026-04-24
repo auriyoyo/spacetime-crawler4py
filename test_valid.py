@@ -25,6 +25,17 @@ class TestIsValid(unittest.TestCase):
         self.assertFalse(is_valid("https://vision.ics.uci.edu/hello.exe"))
         self.assertFalse(is_valid("https://vision.informatics.uci.edu/vid.mp3"))
 
+    def test_wont_go_to_dataset_page(self):
+        self.assertFalse(is_valid("https://archive.ics.uci.edu/datasets/"))
+        self.assertFalse(is_valid("https://archive.ics.uci.edu/dataset/2/adult"))
+        self.assertFalse(is_valid("https://archive.ics.uci.edu/dataset/59/letter+recognition"))
+        self.assertFalse(is_valid("https://archive.ics.uci.edu/ml/datasets/Letter+recognition"))
+
+    def test_wont_go_to_urls_marked_with_events_or_as_calendar(self):
+        self.assertFalse(is_valid("https://ics.uci.edu/events/"))
+        self.assertFalse(is_valid("https://ics.uci.edu/events/month/?tribe__ecp_custom_47%5B0%5D=Career+Development"))
+        self.assertFalse(is_valid("https://stat.ics.uci.edu/calendar/"))
+
 
 
 
