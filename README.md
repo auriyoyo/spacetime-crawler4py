@@ -225,6 +225,6 @@ TMUX - persistent terminal so crawler doesn't die
 `tmux attach -t name`
 `tmux kill-session -t name`
 
-Additional note: When using openlab you might log into larryl10@circinus-10 one time 
-and larryl10@circinus-3 another time. If you can't find your tmux session this may 
+Additional note: When using openlab you might log into user@circinus-10 one time 
+and user@circinus-3 another time. If you can't find your tmux session this may 
 be why
