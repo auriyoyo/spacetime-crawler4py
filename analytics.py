@@ -5,6 +5,9 @@ import json
 # Used in scraper to record the number of times each word appears in the pages we crawl.
 word_counts = defaultdict(int)
 
+# subdomains tracks unique subdomains e.g. vision.ics.uci.edu
+unique_subdomains = set()
+
 # STOP_WORDS is a set of common English words that will be ignored when counting word frequencies.
 STOP_WORDS = {
     "a", "able", "about", "above", "abst", "accordance", "according",
@@ -176,3 +179,11 @@ def save_all(filepath_counts="word_counts.json", filepath_top50="top_50.txt"):
     save_word_counts(filepath_counts)
     save_top_50(filepath_top50)
     save_longest_page()
+    
+
+def update_subdomain_list(url) -> None:
+    unique_subdomains.add(url)
+    
+
+def get_unique_subdomain_count() -> int:
+    return len(unique_subdomains)
