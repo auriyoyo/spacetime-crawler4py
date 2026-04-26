@@ -97,10 +97,12 @@ STOP_WORDS = {
     "yourselves", "you've", "z", "zero"
 }
 
+
 # update_word_counts takes a list of words and updates the global word_counts dictionary with the counts of each word.
 def update_word_counts(words):
     for word in words:
         word_counts[word] += 1
+
 
 # tokenize takes a string of text and returns a list of words.
 def tokenize(text):
@@ -121,6 +123,7 @@ def tokenize(text):
         buffer = ""
     return results_list
 
+
 # load_word_counts loads the word counts from a JSON file into the global word_counts dictionary.
 def load_word_counts(filepath="word_counts.json"):
     global word_counts
@@ -136,9 +139,11 @@ def save_word_counts(filepath="word_counts.json"):
     with open(filepath, "w") as f:
         json.dump(dict(word_counts), f)
 
+
 # get_top_50 returns a list of the top 50 most common words and their counts, sorted by count in descending order.
 def get_top_50():
     return sorted(word_counts.items(), key=lambda x: x[1], reverse=True)[:50]
+
 
 # save_top_50 saves the top 50 most common words and their counts to a text file.
 def save_top_50(filepath="top_50.txt"):
@@ -147,7 +152,27 @@ def save_top_50(filepath="top_50.txt"):
         for word, count in top_50:
             f.write(f"{word}: {count}\n")
 
+
+# longest_page is a dictionary that keeps track of the url that contains the most words and the word count of that page. 
+longest_page = {"url": "", "count": 0}
+
+
+# update_longest_page takes a url and a word count and updates longest_page
+def update_longest_page(url, word_count):
+    if word_count > longest_page["count"]:
+        longest_page["url"] = url
+        longest_page["count"] = word_count
+
+
+# save_longest_page saves the longest page information to a text file
+def save_longest_page(filepath="longest_page.txt"):
+    with open(filepath, "w") as f:
+        f.write(f"URL: {longest_page['url']}\n")
+        f.write(f"Word Count: {longest_page['count']}\n")
+
+
 # save_all saves both the word counts and the top 50 words to their respective files.
 def save_all(filepath_counts="word_counts.json", filepath_top50="top_50.txt"):
     save_word_counts(filepath_counts)
     save_top_50(filepath_top50)
+    save_longest_page()

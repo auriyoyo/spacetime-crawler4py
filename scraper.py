@@ -2,6 +2,7 @@ import re
 from urllib.parse import urlparse, urljoin, urlunparse
 from analytics import (
     tokenize,
+    update_longest_page,
     update_word_counts,
     STOP_WORDS,
     save_all,
@@ -15,6 +16,8 @@ pages_crawled = 0
 
 def scraper(url, resp):
     global pages_crawled
+
+    # check for valid response, return empty list if not valid.
     if resp.status != 200 or not resp.raw_response or not resp.raw_response.content:
         if resp.error:
             print(f"Error crawling {url}: {resp.error}")
@@ -42,14 +45,20 @@ def scraper(url, resp):
             ]
         )
     )
-    words = []
 
-    for w in tokenize(text):
+    # tokenize the text and filter out stop words and numeric tokens
+    words = []
+    all_words = tokenize(text)
+    for w in all_words:
         w = w.lower()
         if w not in STOP_WORDS and not w.isnumeric():
             words.append(w)
 
+    # update word counts and longest page info
     update_word_counts(words)
+    update_longest_page(url, len(words))
+
+    # increment pages_crawled and save info every 100 pages
     pages_crawled += 1
     if pages_crawled % 100 == 0:
         save_all()
