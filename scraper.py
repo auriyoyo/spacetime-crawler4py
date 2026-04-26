@@ -70,6 +70,8 @@ def scraper(url, resp):
     parsed = urlparse(url)
     update_subdomain_dict(f"{parsed.netloc}", len(valid_next_links))
         
+    get_unique_subdomain_with_unique_pages()
+        
     return valid_next_links
 
 
