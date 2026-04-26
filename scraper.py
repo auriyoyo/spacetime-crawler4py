@@ -6,6 +6,8 @@ from analytics import (
     update_word_counts,
     update_subdomain_list,
     get_unique_subdomain_count,
+    update_subdomain_list,
+    get_unique_subdomain_count,
     STOP_WORDS,
     save_all,
     load_word_counts,

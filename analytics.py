@@ -1,5 +1,6 @@
 from collections import defaultdict
 import json
+from urllib.parse import urlparse
 
 # word_counts is a dictionary that maps words to their counts.
 # Used in scraper to record the number of times each word appears in the pages we crawl.
