@@ -1,9 +1,13 @@
 from collections import defaultdict
 import json
+from urllib.parse import urlparse
 
 # word_counts is a dictionary that maps words to their counts.
 # Used in scraper to record the number of times each word appears in the pages we crawl.
 word_counts = defaultdict(int)
+
+# subdomains tracks unique subdomains e.g. vision.ics.uci.edu
+subdomains = set()
 
 # STOP_WORDS is a set of common English words that will be ignored when counting word frequencies.
 STOP_WORDS = {
@@ -176,3 +180,12 @@ def save_all(filepath_counts="word_counts.json", filepath_top50="top_50.txt"):
     save_word_counts(filepath_counts)
     save_top_50(filepath_top50)
     save_longest_page()
+    
+
+def update_subdomain_list(url) -> None:
+    parsed_url = urlparse(url)
+    subdomains.add(f"{parsed_url.scheme}://{parsed_url.netloc}")
+    
+
+def get_unique_subdomain_count() -> int:
+    return len(subdomains)

@@ -4,6 +4,8 @@ from analytics import (
     tokenize,
     update_longest_page,
     update_word_counts,
+    update_subdomain_list,
+    get_unique_subdomain_count,
     STOP_WORDS,
     save_all,
     load_word_counts,
@@ -12,7 +14,6 @@ from bs4 import BeautifulSoup
 
 load_word_counts()
 pages_crawled = 0
-
 
 def scraper(url, resp):
     global pages_crawled
@@ -57,7 +58,8 @@ def scraper(url, resp):
     # update word counts and longest page info
     update_word_counts(words)
     update_longest_page(url, len(words))
-
+    update_subdomain_list(url)
+    
     # increment pages_crawled and save info every 100 pages
     pages_crawled += 1
     if pages_crawled % 100 == 0:
