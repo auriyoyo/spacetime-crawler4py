@@ -1,9 +1,58 @@
 import re
 from urllib.parse import urlparse, urljoin, urlunparse
+from analytics import (
+    tokenize,
+    update_word_counts,
+    STOP_WORDS,
+    save_all,
+    load_word_counts,
+)
 from bs4 import BeautifulSoup
+
+load_word_counts()
+pages_crawled = 0
 
 
 def scraper(url, resp):
+    global pages_crawled
+    if resp.status != 200 or not resp.raw_response or not resp.raw_response.content:
+        if resp.error:
+            print(f"Error crawling {url}: {resp.error}")
+        return []
+
+    soup = BeautifulSoup(resp.raw_response.content, "lxml")
+    # extract text from relevant tags and target main content only
+    text = " ".join(
+        tag.get_text()
+        for tag in soup.find_all(
+            [
+                "p",
+                "h1",
+                "h2",
+                "h3",
+                "h4",
+                "h5",
+                "h6",
+                "li",
+                "td",
+                "th",
+                "article",
+                "section",
+                "main",
+            ]
+        )
+    )
+    words = []
+
+    for w in tokenize(text):
+        w = w.lower()
+        if w not in STOP_WORDS and not w.isnumeric():
+            words.append(w)
+
+    update_word_counts(words)
+    pages_crawled += 1
+    if pages_crawled % 100 == 0:
+        save_all()
     links = extract_next_links(url, resp)
     return [link for link in links if is_valid(link)]
 
@@ -41,23 +90,31 @@ def extract_next_links(url, resp):
         defragmented = urlunparse(parsed._replace(fragment=""))
 
         links.append(defragmented)
-    
+
     # 5. Return the list of links
     return links
 
 
 def is_valid(url):
-    # Decide whether to crawl this url or not. 
+    # Decide whether to crawl this url or not.
     # If you decide to crawl it, return True; otherwise return False.
     # There are already some conditions that return False.
     try:
         parsed = urlparse(url)
         if parsed.scheme not in set(["http", "https"]):
             return False
-        
+
         # Invalid if the netloc (sub/domain) doesn't contain any of the four valid ones
         # ASSUMING period is required, gonna ask 4/24
-        if not any(parsed.netloc.endswith(domain) for domain in [".ics.uci.edu", ".cs.uci.edu", ".informatics.uci.edu", ".stat.uci.edu"]):
+        if not any(
+            parsed.netloc.endswith(domain)
+            for domain in [
+                ".ics.uci.edu",
+                ".cs.uci.edu",
+                ".informatics.uci.edu",
+                ".stat.uci.edu",
+            ]
+        ):
             return False
 
         # Avoiding large files with low information value
@@ -67,9 +124,8 @@ def is_valid(url):
 
         # Avoiding infinite traps
         if parsed.path.startswith("/events/") or parsed.path.startswith("/calendar/"):
-            return False 
-            #can also check if it ends with a date if necessary, but seems to always start with /events/
- 
+            return False
+            # can also check if it ends with a date if necessary, but seems to always start with /events/
 
         return not re.match(
             r".*\.(css|js|bmp|gif|jpe?g|ico"
@@ -79,7 +135,9 @@ def is_valid(url):
             + r"|data|dat|exe|bz2|tar|msi|bin|7z|psd|dmg|iso"
             + r"|epub|dll|cnf|tgz|sha1"
             + r"|thmx|mso|arff|rtf|jar|csv"
-            + r"|rm|smil|wmv|swf|wma|zip|rar|gz)$", parsed.path.lower())
+            + r"|rm|smil|wmv|swf|wma|zip|rar|gz)$",
+            parsed.path.lower(),
+        )
 
     except TypeError:
         print("TypeError for ", parsed)
