@@ -4,10 +4,8 @@ from analytics import (
     tokenize,
     update_longest_page,
     update_word_counts,
-    update_subdomain_list,
-    get_unique_subdomain_count,
-    update_subdomain_list,
-    get_unique_subdomain_count,
+    update_subdomain_dict,
+    get_unique_subdomain_with_unique_pages,
     STOP_WORDS,
     save_all,
     load_word_counts,
@@ -66,7 +64,13 @@ def scraper(url, resp):
     if pages_crawled % 100 == 0:
         save_all()
     links = extract_next_links(url, resp)
-    return [link for link in links if is_valid(link)]
+    valid_next_links = [link for link in links if is_valid(link)]
+
+    # grab subdomain (no protocol) and unique pages within that domain
+    parsed = urlparse(url)
+    update_subdomain_dict(f"{parsed.netloc}", len(valid_next_links))
+        
+    return valid_next_links
 
 
 def extract_next_links(url, resp):
@@ -102,7 +106,7 @@ def extract_next_links(url, resp):
         defragmented = urlunparse(parsed._replace(fragment=""))
 
         links.append(defragmented)
-
+    
     # 5. Return the list of links
     return links
 
@@ -138,9 +142,6 @@ def is_valid(url):
         if parsed.path.startswith("/events/") or parsed.path.startswith("/calendar/"):
             return False
             # can also check if it ends with a date if necessary, but seems to always start with /events/
-
-        # tracking unique subdomains
-        update_subdomain_list(f"{parsed.scheme}://{parsed.netloc}")
 
         return not re.match(
             r".*\.(css|js|bmp|gif|jpe?g|ico"

@@ -7,7 +7,7 @@ from urllib.parse import urlparse
 word_counts = defaultdict(int)
 
 # subdomains tracks unique subdomains e.g. vision.ics.uci.edu
-unique_subdomains = set()
+unique_subdomains = dict()
 
 # STOP_WORDS is a set of common English words that will be ignored when counting word frequencies.
 STOP_WORDS = {
@@ -182,9 +182,14 @@ def save_all(filepath_counts="word_counts.json", filepath_top50="top_50.txt"):
     save_longest_page()
     
 
-def update_subdomain_list(url) -> None:
-    unique_subdomains.add(url)
-    
+def update_subdomain_dict(url, count) -> None:
+    unique_subdomains[url] = count
+
 
 def get_unique_subdomain_count() -> int:
     return len(unique_subdomains)
+
+
+def get_unique_subdomain_with_unique_pages():
+    for subdomain, count in unique_subdomains.items():
+        print(f"{subdomain}, {count}")
