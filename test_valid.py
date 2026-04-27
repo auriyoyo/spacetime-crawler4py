@@ -36,6 +36,20 @@ class TestIsValid(unittest.TestCase):
         self.assertFalse(is_valid("https://ics.uci.edu/events/month/?tribe__ecp_custom_47%5B0%5D=Career+Development"))
         self.assertFalse(is_valid("https://stat.ics.uci.edu/calendar/"))
 
+    def test_wont_go_to_page_with_do_equals_media(self):
+        self.assertFalse(is_valid("https://wiki.ics.uci.edu/doku.php/projects:start?tab_details=history&do=media&tab_files=upload&image=security%3Apasted%3A20250905-094915.png&ns=services%3Asun_grid_engine"))
+        self.assertFalse(is_valid("https://wiki.ics.uci.edu/doku.php/projects:start?tab_files=files&do=media&tab_details=view&image=vpn_settings5.png&ns=security"))
+        self.assertFalse(is_valid("https://wiki.ics.uci.edu/doku.php/projects:start?tab_files=search&do=media&tab_details=view&image=security%3Avpn_settings3.png&ns=services%3Adatabase"))
+        self.assertFalse(is_valid("https://intranet.ics.uci.edu/doku.php/sidebar?tab_details=history&do=media&tab_files=search&image=pasted%3A20250808-1801032.png&ns=pasted"))
+        self.assertFalse(is_valid("http://intranet.ics.uci.edu/doku.php/login?tab_details=view&do=media&tab_files=files&image=pasted%3A20250808-1801032.png&ns=pasted"))
+
+    def test_wont_go_to_pages_with_copying_editing_exporting_or_difference(self):
+        self.assertTrue(is_valid("http://intranet.ics.uci.edu/doku.php/login:login"))
+        self.assertFalse(is_valid("http://swiki.ics.uci.edu/doku.php/software:windows10_eol?do=edit"))
+        self.assertFalse(is_valid("http://swiki.ics.uci.edu/doku.php/sidebar?do="))
+        self.assertFalse(is_valid("http://swiki.ics.uci.edu/doku.php/accounts:new_user_guide?do=export_pdf"))
+        self.assertFalse(is_valid("http://intranet.ics.uci.edu/doku.php/start?do=diff&rev2%5B0%5D=1587997204&rev2%5B1%5D=1767734819&difftype=sidebyside"))
+
 
 
 

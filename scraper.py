@@ -121,7 +121,6 @@ def is_valid(url):
             return False
 
         # Invalid if the netloc (sub/domain) doesn't contain any of the four valid ones
-        # ASSUMING period is required, gonna ask 4/24
         if not any(
             parsed.netloc.endswith(domain)
             for domain in [
@@ -138,10 +137,19 @@ def is_valid(url):
             if parsed.path.startswith(ml_dataset):
                 return False
 
-        # Avoiding infinite traps
+        # Avoiding calendars
         if parsed.path.startswith("/events/") or parsed.path.startswith("/calendar/"):
             return False
-            # can also check if it ends with a date if necessary, but seems to always start with /events/
+        
+        # Avoiding media manager websites (low info, gets trapped between all the buttons)
+        if "do=media" in parsed.query: return False
+
+        # Avoiding copies of pages (ends with do=), editable copies of pages, (do=edit), downloading as pdf (do=export_pdf)
+        #   or comparing pages (do=diff, gets stuck in all the combinations of the dropdown bar)
+        if parsed.query.endswith("do="): return False
+        if any(do in parsed.query for do in ["do=edit", "do=export_pdf"]): return False
+        if parsed.netloc == "intranet.ics.uci.edu" and "do=diff" in parsed.query: return False
+
 
         return not re.match(
             r".*\.(css|js|bmp|gif|jpe?g|ico"
