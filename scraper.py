@@ -150,17 +150,16 @@ def is_valid(url):
         # Avoid DokuWiki action pages
         # Avoiding copies of pages (ends with do=), editable copies of pages, (do=edit), downloading as pdf (do=export_pdf)
         #   or comparing pages (do=diff, gets stuck in all the combinations of the dropdown bar)
-        if any(action in query for action in [
-            "do=media",
-            "do=edit",
-            "do=export_pdf",
-            "do=diff",
-            "do=login",
-            "do=index",
-            "do=recent",
-            "do=backlink",
-            "do=revisions",
-        ]):
+
+        if "do=" in query:
+            return False
+
+        # Avoid excessive query parameter combinations
+        if query.count("=") > 3:
+            return False
+
+        # Avoid long noisy queries
+        if len(query) > 60:
             return False
         
         # Avoid old revision/version-history pages
