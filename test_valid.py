@@ -50,7 +50,18 @@ class TestIsValid(unittest.TestCase):
         self.assertFalse(is_valid("http://swiki.ics.uci.edu/doku.php/accounts:new_user_guide?do=export_pdf"))
         self.assertFalse(is_valid("http://intranet.ics.uci.edu/doku.php/start?do=diff&rev2%5B0%5D=1587997204&rev2%5B1%5D=1767734819&difftype=sidebyside"))
 
+    def test_wiki_query_traps(self):
+        # idx pages
+        self.assertFalse(is_valid("https://wiki.ics.uci.edu/doku.php/wiki:nonexisting?idx=wiki"))
+        self.assertFalse(is_valid("http://swiki.ics.uci.edu/doku.php/storage:onedrive?idx=storage"))
+        self.assertFalse(is_valid("http://swiki.ics.uci.edu/doku.php/security:zotdefend?idx=services%3Adatabase"))
 
+        # login/index actions create alternate wiki views
+        self.assertFalse(is_valid("http://swiki.ics.uci.edu/doku.php/services:network?do=login&sectok="))
+        self.assertFalse(is_valid("http://swiki.ics.uci.edu/doku.php/services:network?do=index"))
+
+        # normal wiki content page should still be allowed
+        self.assertTrue(is_valid("http://swiki.ics.uci.edu/doku.php/services:network"))
 
 
 if __name__ == '__main__':

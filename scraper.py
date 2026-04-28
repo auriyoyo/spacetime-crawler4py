@@ -150,6 +150,23 @@ def is_valid(url):
         if any(do in parsed.query for do in ["do=edit", "do=export_pdf"]): return False
         if parsed.netloc == "intranet.ics.uci.edu" and "do=diff" in parsed.query: return False
 
+        query = parsed.query.lower()
+
+        # Avoid DokuWiki tab pages 
+        if "idx=" in query:
+            return False
+
+        # Avoid DokuWiki action pages
+        if any(x in query for x in [
+            "do=media",
+            "do=edit",
+            "do=export_pdf",
+            "do=diff",
+            "do=login",
+            "do=index"
+        ]):
+            return False
+        
 
         return not re.match(
             r".*\.(css|js|bmp|gif|jpe?g|ico"
