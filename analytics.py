@@ -174,14 +174,6 @@ def save_longest_page(filepath="longest_page.txt"):
         f.write(f"URL: {longest_page['url']}\n")
         f.write(f"Word Count: {longest_page['count']}\n")
 
-
-# save_all saves both the word counts and the top 50 words to their respective files.
-def save_all(filepath_counts="word_counts.json", filepath_top50="top_50.txt"):
-    save_word_counts(filepath_counts)
-    save_top_50(filepath_top50)
-    save_longest_page()
-    
-
 def update_subdomain_dict(url, count) -> None:
     unique_subdomains[url] = unique_subdomains[url] + count
 
@@ -193,3 +185,21 @@ def get_unique_subdomain_count() -> int:
 def get_unique_subdomain_with_unique_pages():
     for subdomain, count in unique_subdomains.items():
         print(f"{subdomain}, {count}")
+        
+        
+# save_subdomain_and_counts saves the subdomain and count information to a text file
+def save_subdomain_and_counts(filepath="subdomain_and_counts.txt"):
+    with open(filepath, "w") as f:
+        for subdomain, count in unique_subdomains.items():
+            f.write(f"{subdomain}: {count}\n")
+
+
+'''
+Save all helps to generate a manual report by saving the words counts, 
+the top 50 words (with their files), and the subdomain and their counts
+'''
+def save_all(filepath_counts="word_counts.json", filepath_top50="top_50.txt"):
+    save_word_counts(filepath_counts)
+    save_top_50(filepath_top50)
+    save_longest_page()
+    save_subdomain_and_counts()
