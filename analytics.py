@@ -174,8 +174,10 @@ def save_longest_page(filepath="longest_page.txt"):
         f.write(f"URL: {longest_page['url']}\n")
         f.write(f"Word Count: {longest_page['count']}\n")
 
-def update_subdomain_dict(url, count) -> None:
-    unique_subdomains[url] = unique_subdomains[url] + count
+def update_subdomain_dict(url, pages_in_subdomain) -> None:
+    if url not in unique_subdomains:
+        unique_subdomains[url] = set()
+    unique_subdomains[url].update(pages_in_subdomain) # adding all pages in subdomain set to remove the possibility of duplicates
 
 
 def get_unique_subdomain_count() -> int:
@@ -183,15 +185,15 @@ def get_unique_subdomain_count() -> int:
 
 
 def get_unique_subdomain_with_unique_pages():
-    for subdomain, count in unique_subdomains.items():
-        print(f"{subdomain}, {count}")
-        
-        
+    for subdomain, pages in unique_subdomains.items():
+        print(f"{subdomain}, {len(pages)}")
+
+
 # save_subdomain_and_counts saves the subdomain and count information to a text file
 def save_subdomain_and_counts(filepath="subdomain_and_counts.txt"):
     with open(filepath, "w") as f:
-        for subdomain, count in unique_subdomains.items():
-            f.write(f"{subdomain}: {count}\n")
+        for subdomain, pages in unique_subdomains.items():
+            f.write(f"{subdomain}: {len(pages)}\n")
 
 
 '''
