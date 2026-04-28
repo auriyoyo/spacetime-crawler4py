@@ -59,9 +59,19 @@ class TestIsValid(unittest.TestCase):
         # login/index actions create alternate wiki views
         self.assertFalse(is_valid("http://swiki.ics.uci.edu/doku.php/services:network?do=login&sectok="))
         self.assertFalse(is_valid("http://swiki.ics.uci.edu/doku.php/services:network?do=index"))
+        self.assertFalse(is_valid("https://wiki.ics.uci.edu/doku.php/accounts:start?do=recent"))
+        self.assertFalse(is_valid("https://wiki.ics.uci.edu/doku.php/accounts:start?do=backlink"))
+        self.assertFalse(is_valid("https://wiki.ics.uci.edu/doku.php/accounts:start?do=revisions"))
+        self.assertFalse(is_valid("https://wiki.ics.uci.edu/doku.php/accounts:start?do=diff"))
+
+        # revision/history comparison pages
+        self.assertFalse(is_valid("https://wiki.ics.uci.edu/doku.php/accounts:fuse-sshfs?rev=1455843173"))
+        self.assertFalse(is_valid("https://wiki.ics.uci.edu/doku.php/accounts:fuse-sshfs?rev=1455843173&do=diff"))
+        self.assertFalse(is_valid("https://wiki.ics.uci.edu/doku.php/accounts:fuse-sshfs?do=diff&rev2%5B0%5D=1455842164&rev2%5B1%5D=1776270938&difftype=sidebyside"))
 
         # normal wiki content page should still be allowed
         self.assertTrue(is_valid("http://swiki.ics.uci.edu/doku.php/services:network"))
+
 
 
 if __name__ == '__main__':

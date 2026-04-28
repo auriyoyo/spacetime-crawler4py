@@ -141,30 +141,30 @@ def is_valid(url):
         if parsed.path.startswith("/events/") or parsed.path.startswith("/calendar/"):
             return False
         
-        # Avoiding media manager websites (low info, gets trapped between all the buttons)
-        if "do=media" in parsed.query: return False
-
-        # Avoiding copies of pages (ends with do=), editable copies of pages, (do=edit), downloading as pdf (do=export_pdf)
-        #   or comparing pages (do=diff, gets stuck in all the combinations of the dropdown bar)
-        if parsed.query.endswith("do="): return False
-        if any(do in parsed.query for do in ["do=edit", "do=export_pdf"]): return False
-        if parsed.netloc == "intranet.ics.uci.edu" and "do=diff" in parsed.query: return False
-
         query = parsed.query.lower()
-
         # Avoid DokuWiki tab pages 
         if "idx=" in query:
             return False
 
+        # Avoiding media manager websites (low info, gets trapped between all the buttons)
         # Avoid DokuWiki action pages
-        if any(x in query for x in [
+        # Avoiding copies of pages (ends with do=), editable copies of pages, (do=edit), downloading as pdf (do=export_pdf)
+        #   or comparing pages (do=diff, gets stuck in all the combinations of the dropdown bar)
+        if any(action in query for action in [
             "do=media",
             "do=edit",
             "do=export_pdf",
             "do=diff",
             "do=login",
-            "do=index"
+            "do=index",
+            "do=recent",
+            "do=backlink",
+            "do=revisions",
         ]):
+            return False
+        
+        # Avoid old revision/version-history pages
+        if any(x in query for x in ["rev=", "rev2", "difftype"]):
             return False
         
 
