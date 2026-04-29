@@ -1,6 +1,6 @@
 from collections import defaultdict
 import json
-from urllib.parse import urlparse
+import re
 
 # word_counts is a dictionary that maps words to their counts.
 # Used in scraper to record the number of times each word appears in the pages we crawl.
@@ -205,3 +205,18 @@ def save_all(filepath_counts="word_counts.json", filepath_top50="top_50.txt"):
     save_top_50(filepath_top50)
     save_longest_page()
     save_subdomain_and_counts()
+    
+    
+# instead of being run every 100 cycles get_unique_pages is meant to be run at the end
+# of the crawl when we're generating our manual report
+def get_unique_pages():
+    unique_pages = set()
+    pattern = re.compile(r"Downloaded (\S+), status") # We're getting the URL in the log file
+                                                      # \S+ gets all non-whitespace and we're
+                                                      # looking between Downloaded and status
+    with open("./Logs/Worker.log", "r") as f:
+        for line in f:
+            match = re.search(pattern, line)
+            unique_pages.add(match.group(1))
+            
+    print(f"Unique pages: {len(unique_pages)}")
