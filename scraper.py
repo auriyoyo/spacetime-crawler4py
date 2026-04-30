@@ -91,6 +91,12 @@ def extract_next_links(url, resp):
             print(f"Error crawling {url}: {resp.error}")
         return []
 
+    # 1B. Check if the content type is HTML before trying to parse it
+    content_type = resp.raw_response.headers.get("Content-Type", "")
+    if "text/html" not in content_type:
+        return []
+
+
     # 2. Parse the HTML content and extract links using BeautifulSoup
     soup = BeautifulSoup(resp.raw_response.content, "lxml")
     links = []
@@ -166,7 +172,17 @@ def is_valid(url):
         if any(x in query for x in ["rev=", "rev2", "difftype"]):
             return False
         
+        # Avoid links that trigger download of files or pdfs
+        if any(x in query for x in [
+            "action=raw",
+            "action=download",
+            "format=pdf",
+            "output=pdf",
+            "export_pdf",
+        ]):
+            return False
 
+        
         return not re.match(
             r".*\.(css|js|bmp|gif|jpe?g|ico"
             + r"|png|tiff?|mid|mp2|mp3|mp4"
