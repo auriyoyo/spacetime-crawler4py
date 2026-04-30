@@ -72,6 +72,19 @@ class TestIsValid(unittest.TestCase):
         # normal wiki content page should still be allowed
         self.assertTrue(is_valid("http://swiki.ics.uci.edu/doku.php/services:network"))
 
+    # have to run these later
+    def test_wont_go_to_diff_comparison_page(self):
+        self.assertFalse(is_valid("https://ics.uci.edu/wiki/public/wiki/cs122b-2017-winter-project3?action=diff&version=5"))
+        self.assertFalse(is_valid("https://ics.uci.edu/wiki/public/wiki/cs122b-2017-winter-project4?action=diff&version=2"))
+
+    def test_wont_go_to_grape_ics_uci_edu_pages(self):
+        self.assertFalse(is_valid("https://grape.ics.uci.edu/wiki/public/wiki/cs122b-2017-winter-project4?format=txt&version=11"))
+        self.assertFalse(is_valid("https://grape.ics.uci.edu/wiki/public/wiki/cs122b-2016-spring-project5-mysql-master-slave?action=history"))
+
+    def test_wont_go_to_txt_files(self):
+        self.assertFalse(is_valid("http://seal.ics.uci.edu/projects/covert/appList.txt"))
+        self.assertFalse(is_valid("https://ics.uci.edu/wiki/public/wiki/cs122b-2017-winter-project3?format=txt&version=8"))
+
 
 
 if __name__ == '__main__':

@@ -205,6 +205,11 @@ def save_all(filepath_counts="word_counts.json", filepath_top50="top_50.txt"):
     save_top_50(filepath_top50)
     save_longest_page()
     save_subdomain_and_counts()
+
+# Makes a page with a running average page size as the crawler crawls, for observation
+def save_and_calc_avg_page_size(sum_bytes: int, pages_crawled: int):
+    with open("avg_page_size", "w") as f:
+        f.write(f"{sum_bytes / pages_crawled}\n")
     
     
 # instead of being run every 100 cycles get_unique_pages is meant to be run at the end

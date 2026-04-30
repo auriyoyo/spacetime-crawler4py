@@ -9,14 +9,24 @@ from analytics import (
     STOP_WORDS,
     save_all,
     load_word_counts,
+    save_and_calc_avg_page_size
 )
 from bs4 import BeautifulSoup
 
 load_word_counts()
 pages_crawled = 0
+sum_bytes = 0
+byte_pages = 0
 
 def scraper(url, resp):
     global pages_crawled
+    global sum_bytes
+    global byte_pages
+
+    # If error is that the content is too large, save its url and size to a text file for inspection
+    if resp.status == 607:
+        with open("too_large.txt", "a") as f:
+            f.write(f"{url}")
 
     # check for valid response, return empty list if not valid.
     if resp.status != 200 or not resp.raw_response or not resp.raw_response.content:
@@ -58,13 +68,21 @@ def scraper(url, resp):
     # update word counts and longest page info
     update_word_counts(words)
     update_longest_page(url, len(words))
+
+    # update sum_bytes with the number of bytes in this page
+    if 'content-length' in resp.raw_response.headers:
+        length = resp.raw_response.headers['content-length']
+        sum_bytes += int(length)
+        byte_pages += 1
     
     # increment pages_crawled and save info every 100 pages
     pages_crawled += 1
     if pages_crawled % 100 == 0:
         save_all()
+        save_and_calc_avg_page_size(sum_bytes, byte_pages)
     links = extract_next_links(url, resp)
-    valid_next_links = [link for link in links if is_valid(link)]
+    valid_next_links = [link for link in links if \
+                        is_valid(link) and ('content-length' not in resp.raw_response.headers or int(resp.raw_response.headers['content-length']) < 100000)]
 
     # grab subdomain (no protocol) and unique pages within that domain
     parsed = urlparse(url)
@@ -165,7 +183,6 @@ def is_valid(url):
         # Avoid DokuWiki action pages
         # Avoiding copies of pages (ends with do=), editable copies of pages, (do=edit), downloading as pdf (do=export_pdf)
         #   or comparing pages (do=diff, gets stuck in all the combinations of the dropdown bar)
-
         if "do=" in query:
             return False
 
@@ -178,7 +195,7 @@ def is_valid(url):
             return False
         
         # Avoid old revision/version-history pages
-        if any(x in query for x in ["rev=", "rev2", "difftype"]):
+        if any(x in query for x in ["rev=", "rev2", "difftype", "action=diff"]):
             return False
         
         # Avoid links that trigger download of files or pdfs
@@ -188,8 +205,12 @@ def is_valid(url):
             "format=pdf",
             "output=pdf",
             "export_pdf",
+            "format=txt"
         ]):
             return False
+
+        # Avoid certain trap websites
+        if parsed.netloc == "grape.ics.uci.edu": return False
 
         
         return not re.match(
@@ -199,7 +220,7 @@ def is_valid(url):
             + r"|ps|eps|tex|ppt|pptx|doc|docx|xls|xlsx|names"
             + r"|data|dat|exe|bz2|tar|msi|bin|7z|psd|dmg|iso"
             + r"|epub|dll|cnf|tgz|sha1"
-            + r"|thmx|mso|arff|rtf|jar|csv"
+            + r"|thmx|mso|arff|rtf|jar|csv|txt"
             + r"|rm|smil|wmv|swf|wma|zip|rar|gz)$",
             parsed.path.lower(),
         )
