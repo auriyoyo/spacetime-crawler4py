@@ -1,5 +1,5 @@
 import re
-from urllib.parse import urlparse, urljoin, urlunparse
+from urllib.parse import urlparse, urljoin, urlunparse, unquote
 from analytics import (
     tokenize,
     update_longest_page,
@@ -147,7 +147,8 @@ def is_valid(url):
         if parsed.path.startswith("/events/") or parsed.path.startswith("/calendar/"):
             return False
         
-        query = parsed.query.lower()
+        # Using unquote to decode URL-encoded characters enabling proper detection of invalid query parameters
+        query = unquote(parsed.query).lower()
         # Avoid DokuWiki tab pages 
         if "idx=" in query:
             return False
