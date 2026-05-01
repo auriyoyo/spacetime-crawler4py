@@ -252,20 +252,18 @@ def is_valid(url):
         return not re.match(
             r".*\.(css|js|bmp|gif|jpe?g|ico"
             + r"|png|tiff?|mid|mp2|mp3|mp4"
-            + r"|wav|avi|mov|mpeg|ram|m4v|mkv|ogg|ogv|pdf"
+            + r"|wav|avi|mov|mpeg|mpg|ram|m4v|mkv|ogg|ogv|pdf"
             + r"|ps|eps|tex|ppt|pptx|doc|docx|xls|xlsx|names"
             + r"|data|dat|exe|bz2|tar|msi|bin|7z|psd|dmg|iso"
             + r"|epub|dll|cnf|tgz|sha1"
             + r"|thmx|mso|arff|rtf|jar|csv|txt"
-            + r"|rm|smil|wmv|swf|wma|zip|rar|gz)"
-            + r"|mpg|avi|flv|mp4|webm"
-            + r"|bib|sql|db|sqlite"
-            + r"|mat|r|rdata|rds"
-            + r"|java|py|cpp|c|h|o"
-            + r"|ppsx|pps|key"
-            + r"|fig|sketch|ai|svg)$",
+            + r"|rm|smil|wmv|swf|wma|zip|rar|gz"
+            + r"|flv|webm|bib|sql|db|sqlite"
+            + r"|mat|rdata|rds|java|py|cpp|c|h"
+            + r"|ppsx|pps|key|fig|sketch|ai|svg)$",
             parsed.path.lower(),
         )
+
 
     except TypeError:
         print("TypeError for ", parsed)
