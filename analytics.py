@@ -222,6 +222,11 @@ def get_unique_pages():
     with open("./Logs/Worker.log", "r") as f:
         for line in f:
             match = re.search(pattern, line)
-            unique_pages.add(match.group(1))
+            
+            if match:
+                unique_pages.add(match.group(1)) # not all lines in worker.log will have "Downloaded"
             
     print(f"Unique pages: {len(unique_pages)}")
+    
+if __name__ == "__main__":
+    get_unique_pages()
