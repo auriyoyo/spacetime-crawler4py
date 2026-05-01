@@ -62,9 +62,10 @@ def scraper(url, resp):
     words = []
     all_words = tokenize(text)
 
-    # only consider pages with at least 50 words to avoid low-information pages
+    #  If there are fewer than 50 words => low-information page => skip the analytics and return valid links to crawl next
     if len(all_words) < 50:
-        return []
+        links = extract_next_links(url, resp)
+        return [link for link in links if is_valid(link)]
 
     for w in all_words:
         w = w.lower()
@@ -93,7 +94,7 @@ def scraper(url, resp):
         if is_valid(link)
         and (
             "content-length" not in resp.raw_response.headers
-            or int(resp.raw_response.headers["content-length"]) < 100000
+            or int(resp.raw_response.headers["content-length"]) < 500000
         )
     ]
 
@@ -212,12 +213,8 @@ def is_valid(url):
         if any(x in query for x in ["rev=", "rev2", "difftype", "action=diff"]):
             return False
 
-        # Avoid pages with pagination in the path which can lead to infinite crawling of similar pages
-        if re.search(r"/page/\d+", parsed.path):
-            return False
-
-        # Avoid author pages which often have low information value and can lead to crawling many similar pages
-        if re.search(r"/author/", parsed.path):
+        # Block paginated author pages that can lead to infinite crawling of low-information pages
+        if re.search(r"/author/.+/page/\d+", parsed.path):
             return False
 
         # Avoid links that trigger download of files or pdfs
@@ -255,6 +252,7 @@ def is_valid(url):
             + r"|rm|smil|wmv|swf|wma|zip|rar|gz"
             + r"|flv|webm|bib|sql|db|sqlite"
             + r"|mat|rdata|rds|java|py|cpp|c|h"
+            + r"|war|img|apk|ipa"
             + r"|ppsx|pps|key|fig|sketch|ai|svg)$",
             parsed.path.lower(),
         )
