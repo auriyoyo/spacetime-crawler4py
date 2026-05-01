@@ -226,7 +226,30 @@ def get_unique_pages():
             if match:
                 unique_pages.add(match.group(1)) # not all lines in worker.log will have "Downloaded"
             
-    print(f"Unique pages: {len(unique_pages)}")
+    #print(f"Unique pages: {len(unique_pages)}")
+    return len(unique_pages)
+
+
+# Writes all the report information into one page: final_report.txt
+def generate_report():
+    with open("final_report.txt", 'w') as report:
+        report.write(f"Number of unique pages: {get_unique_pages()}\n\n\n")
+
+        report.write("Subdomains and their counts:\n")
+        with open("subdomain_and_counts.txt", 'r') as sub:
+            for line in sub:
+                report.write(line)
+        
+        report.write("\n\n\nLongest page:\n")
+        with open("longest_page.txt", 'r') as longest:
+            for line in longest:
+                report.write(line)
+
+        report.write("\n\n\n50 most common words:\n")
+        with open("top_50.txt", 'r') as top50:
+            for line in top50:
+                report.write(line)
+    
     
 if __name__ == "__main__":
-    get_unique_pages()
+    generate_report()
