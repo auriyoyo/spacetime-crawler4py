@@ -44,7 +44,7 @@ class TestIsValid(unittest.TestCase):
         self.assertFalse(is_valid("http://intranet.ics.uci.edu/doku.php/login?tab_details=view&do=media&tab_files=files&image=pasted%3A20250808-1801032.png&ns=pasted"))
 
     def test_wont_go_to_pages_with_copying_editing_exporting_or_difference(self):
-        self.assertTrue(is_valid("http://intranet.ics.uci.edu/doku.php/login:login"))
+        self.assertTrue(is_valid("http://intranet.ics.uci.edu"))
         self.assertFalse(is_valid("http://swiki.ics.uci.edu/doku.php/software:windows10_eol?do=edit"))
         self.assertFalse(is_valid("http://swiki.ics.uci.edu/doku.php/sidebar?do="))
         self.assertFalse(is_valid("http://swiki.ics.uci.edu/doku.php/accounts:new_user_guide?do=export_pdf"))
@@ -71,6 +71,28 @@ class TestIsValid(unittest.TestCase):
 
         # normal wiki content page should still be allowed
         self.assertTrue(is_valid("http://swiki.ics.uci.edu/doku.php/services:network"))
+
+    # have to run these later
+    def test_wont_go_to_diff_comparison_page(self):
+        self.assertFalse(is_valid("https://ics.uci.edu/wiki/public/wiki/cs122b-2017-winter-project3?action=diff&version=5"))
+        self.assertFalse(is_valid("https://ics.uci.edu/wiki/public/wiki/cs122b-2017-winter-project4?action=diff&version=2"))
+
+    def test_wont_go_to_grape_ics_uci_edu_pages(self):
+        self.assertFalse(is_valid("https://grape.ics.uci.edu/wiki/public/wiki/cs122b-2017-winter-project4?format=txt&version=11"))
+        self.assertFalse(is_valid("https://grape.ics.uci.edu/wiki/public/wiki/cs122b-2016-spring-project5-mysql-master-slave?action=history"))
+
+    def test_wont_go_to_txt_files(self):
+        self.assertFalse(is_valid("http://seal.ics.uci.edu/projects/covert/appList.txt"))
+        self.assertFalse(is_valid("https://ics.uci.edu/wiki/public/wiki/cs122b-2017-winter-project3?format=txt&version=8"))
+
+    def test_wont_go_to_dale_cooper(self):
+        self.assertFalse(is_valid("https://dale-cooper-v0.ics.uci.edu/status?&skin=skin-green"))
+        self.assertFalse(is_valid("https://dale-cooper-v0.ics.uci.edu/status?&lang=de&skin=skin-red"))
+
+    def test_wont_go_to_c_equals_o_equals(self):
+        self.assertFalse(is_valid("http://flamingo.ics.uci.edu/releases?C=D;O=A"))
+        self.assertFalse(is_valid("http://www.ics.uci.edu/~dock?C=M;O=A"))
+        self.assertFalse(is_valid("http://www.ics.uci.edu/~dock/manuals/ismb2006-chemoinformatics?C=M;O=D"))
 
 
 
