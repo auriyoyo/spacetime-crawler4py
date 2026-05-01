@@ -9,7 +9,7 @@ from analytics import (
     STOP_WORDS,
     save_all,
     load_word_counts,
-    save_and_calc_avg_page_size
+    save_and_calc_avg_page_size,
 )
 from bs4 import BeautifulSoup
 
@@ -17,6 +17,7 @@ load_word_counts()
 pages_crawled = 0
 sum_bytes = 0
 byte_pages = 0
+
 
 def scraper(url, resp):
     global pages_crawled
@@ -64,7 +65,7 @@ def scraper(url, resp):
     # only consider pages with at least 50 words to avoid low-information pages
     if len(all_words) < 50:
         return []
-    
+
     for w in all_words:
         w = w.lower()
         if w not in STOP_WORDS and not w.isnumeric():
@@ -75,24 +76,31 @@ def scraper(url, resp):
     update_longest_page(url, len(words))
 
     # update sum_bytes with the number of bytes in this page
-    if 'content-length' in resp.raw_response.headers:
-        length = resp.raw_response.headers['content-length']
+    if "content-length" in resp.raw_response.headers:
+        length = resp.raw_response.headers["content-length"]
         sum_bytes += int(length)
         byte_pages += 1
-    
+
     # increment pages_crawled and save info every 100 pages
     pages_crawled += 1
     if pages_crawled % 100 == 0:
         save_all()
         save_and_calc_avg_page_size(sum_bytes, byte_pages)
     links = extract_next_links(url, resp)
-    valid_next_links = [link for link in links if \
-                        is_valid(link) and ('content-length' not in resp.raw_response.headers or int(resp.raw_response.headers['content-length']) < 100000)]
+    valid_next_links = [
+        link
+        for link in links
+        if is_valid(link)
+        and (
+            "content-length" not in resp.raw_response.headers
+            or int(resp.raw_response.headers["content-length"]) < 100000
+        )
+    ]
 
     # grab subdomain (no protocol) and unique pages within that domain
     parsed = urlparse(url)
     update_subdomain_dict(f"{parsed.netloc}", valid_next_links)
-                
+
     return valid_next_links
 
 
@@ -119,7 +127,6 @@ def extract_next_links(url, resp):
     if "text/html" not in content_type:
         return []
 
-
     # 2. Parse the HTML content and extract links using BeautifulSoup
     soup = BeautifulSoup(resp.raw_response.content, "lxml")
     links = []
@@ -143,7 +150,7 @@ def extract_next_links(url, resp):
         defragmented = urlunparse(parsed._replace(fragment=""))
 
         links.append(defragmented)
-    
+
     # 5. Return the list of links
     return links
 
@@ -177,19 +184,21 @@ def is_valid(url):
         # Avoiding calendars
         if parsed.path.startswith("/events/") or parsed.path.startswith("/calendar/"):
             return False
-        
+
         # Using unquote to decode URL-encoded characters enabling proper detection of invalid query parameters
         query = unquote(parsed.query).lower()
 
         # Avoid DokuWiki tab pages, pages with dropdowns, directories
-        if "idx=" in query: return False
-        if parsed.netloc == "dale-cooper-v0.ics.uci.edu": return False
-        if re.match(".*C=[A-Z];O=[A-Z]", parsed.query): return False
+        if "idx=" in query:
+            return False
+        if parsed.netloc == "dale-cooper-v0.ics.uci.edu":
+            return False
+        if re.match(".*C=[A-Z];O=[A-Z]", parsed.query):
+            return False
 
         # Avoid sitemap pages with low info
         if "sitemap" in parsed.path.lower():
             return False
-
 
         # Avoiding media manager websites (low info, gets trapped between all the buttons)
         # Avoid DokuWiki action pages
@@ -197,34 +206,49 @@ def is_valid(url):
             return False
 
         # Avoid excessive query parameter combinations
-        if query.count("=") > 3: return False
+        if query.count("=") > 3:
+            return False
 
         # Avoid long noisy queries
-        if len(query) > 60: return False
-        
+        if len(query) > 60:
+            return False
+
         # Avoid old revision/version-history pages
         if any(x in query for x in ["rev=", "rev2", "difftype", "action=diff"]):
             return False
-        
+
+        # Avoid pages with pagination in the path which can lead to infinite crawling of similar pages
+        if re.search(r"/page/\d+", parsed.path):
+            return False
+
+        # Avoid author pages which often have low information value and can lead to crawling many similar pages
+        if re.search(r"/author/", parsed.path):
+            return False
+
         # Avoid links that trigger download of files or pdfs
-        if any(x in query for x in [
-            "action=raw",
-            "action=download",
-            "format=pdf",
-            "output=pdf",
-            "export_pdf",
-            "format=txt"
-        ]):
+        if any(
+            x in query
+            for x in [
+                "action=raw",
+                "action=download",
+                "format=pdf",
+                "output=pdf",
+                "export_pdf",
+                "format=txt",
+            ]
+        ):
             return False
 
         # Avoid certain trap websites
-        if parsed.netloc == "grape.ics.uci.edu": return False
+        if parsed.netloc == "grape.ics.uci.edu":
+            return False
 
         # Avoid patterns of login-blocked pages
-        if parsed.netloc == "intranet.ics.uci.edu" and ":start" in parsed.path: return False
-        if "/login" in parsed.path: return False
+        if parsed.netloc == "intranet.ics.uci.edu" and ":start" in parsed.path:
+            return False
+        if "/login" in parsed.path:
+            return False
 
-        
         return not re.match(
             r".*\.(css|js|bmp|gif|jpe?g|ico"
             + r"|png|tiff?|mid|mp2|mp3|mp4"
@@ -233,7 +257,13 @@ def is_valid(url):
             + r"|data|dat|exe|bz2|tar|msi|bin|7z|psd|dmg|iso"
             + r"|epub|dll|cnf|tgz|sha1"
             + r"|thmx|mso|arff|rtf|jar|csv|txt"
-            + r"|rm|smil|wmv|swf|wma|zip|rar|gz)$",
+            + r"|rm|smil|wmv|swf|wma|zip|rar|gz)"
+            + r"|mpg|avi|flv|mp4|webm"
+            + r"|bib|sql|db|sqlite"
+            + r"|mat|r|rdata|rds"
+            + r"|java|py|cpp|c|h|o"
+            + r"|ppsx|pps|key"
+            + r"|fig|sketch|ai|svg)$",
             parsed.path.lower(),
         )
 
