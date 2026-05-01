@@ -50,6 +50,11 @@ def scraper(url, resp):
     # tokenize the text and filter out stop words and numeric tokens
     words = []
     all_words = tokenize(text)
+
+    # only consider pages with at least 50 words to avoid low-information pages
+    if len(all_words) < 50:
+        return []
+    
     for w in all_words:
         w = w.lower()
         if w not in STOP_WORDS and not w.isnumeric():
@@ -160,6 +165,11 @@ def is_valid(url):
         # Avoid DokuWiki tab pages 
         if "idx=" in query:
             return False
+
+        # Avoid sitemap pages with low info
+        if "sitemap" in parsed.path.lower():
+            return False
+
 
         # Avoiding media manager websites (low info, gets trapped between all the buttons)
         # Avoid DokuWiki action pages
