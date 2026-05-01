@@ -138,18 +138,13 @@ def extract_next_links(url, resp):
         # 3B. Using try-catch to prevent urljoin from crashing on malformed hrefs
         try:
             absolute = urljoin(url, href)
+            # 4. Strip the fragment identifier (the part after '#') from the URL
             parsed = urlparse(absolute)
             defragmented = urlunparse(parsed._replace(fragment=""))
             links.append(defragmented)
         except ValueError:
             # if a ValueError occurs, skip the link and continue the crawling process
             continue
-
-        # 4. Strip the fragment identifier (the part after '#') from the URL
-        parsed = urlparse(absolute)
-        defragmented = urlunparse(parsed._replace(fragment=""))
-
-        links.append(defragmented)
 
     # 5. Return the list of links
     return links
