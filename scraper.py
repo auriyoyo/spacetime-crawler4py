@@ -175,24 +175,22 @@ def is_valid(url):
         
         # Using unquote to decode URL-encoded characters enabling proper detection of invalid query parameters
         query = unquote(parsed.query).lower()
-        # Avoid DokuWiki tab pages 
-        if "idx=" in query:
-            return False
+
+        # Avoid DokuWiki tab pages, pages with dropdowns, directories
+        if "idx=" in query: return False
+        if parsed.netloc == "dale-cooper-v0.ics.uci.edu": return False
+        if re.match(".*C=[A-Z];O=[A-Z]", parsed.query): return False
 
         # Avoiding media manager websites (low info, gets trapped between all the buttons)
         # Avoid DokuWiki action pages
-        # Avoiding copies of pages (ends with do=), editable copies of pages, (do=edit), downloading as pdf (do=export_pdf)
-        #   or comparing pages (do=diff, gets stuck in all the combinations of the dropdown bar)
         if "do=" in query:
             return False
 
         # Avoid excessive query parameter combinations
-        if query.count("=") > 3:
-            return False
+        if query.count("=") > 3: return False
 
         # Avoid long noisy queries
-        if len(query) > 60:
-            return False
+        if len(query) > 60: return False
         
         # Avoid old revision/version-history pages
         if any(x in query for x in ["rev=", "rev2", "difftype", "action=diff"]):
@@ -211,6 +209,10 @@ def is_valid(url):
 
         # Avoid certain trap websites
         if parsed.netloc == "grape.ics.uci.edu": return False
+
+        # Avoid patterns of login-blocked pages
+        if parsed.netloc == "intranet.ics.uci.edu" and ":start" in parsed.path: return False
+        if "/login" in parsed.path: return False
 
         
         return not re.match(
