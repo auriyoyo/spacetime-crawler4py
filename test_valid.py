@@ -94,7 +94,37 @@ class TestIsValid(unittest.TestCase):
         self.assertFalse(is_valid("http://www.ics.uci.edu/~dock?C=M;O=A"))
         self.assertFalse(is_valid("http://www.ics.uci.edu/~dock/manuals/ismb2006-chemoinformatics?C=M;O=D"))
 
+    def test_root_domains_false(self):
+        self.assertFalse(is_valid("https://ics.uci.edu/"))
+        self.assertFalse(is_valid("https://cs.uci.edu/"))
+        self.assertFalse(is_valid("https://informatics.uci.edu/"))
+        self.assertFalse(is_valid("https://stat.uci.edu/"))
 
+    def test_allowed_subdomains_true(self):
+        self.assertTrue(is_valid("https://www.ics.uci.edu/"))
+        self.assertTrue(is_valid("https://vision.ics.uci.edu/"))
+        self.assertTrue(is_valid("https://www.cs.uci.edu/"))
+        self.assertTrue(is_valid("https://www.informatics.uci.edu/"))
+        self.assertTrue(is_valid("https://www.stat.uci.edu/"))
+
+    def test_fake_uci_domains_false(self):
+        self.assertFalse(is_valid("https://evilics.uci.edu/"))
+        self.assertFalse(is_valid("https://ics.uci.edu.evil.com/"))
+        self.assertFalse(is_valid("https://notuci.edu/"))
+        self.assertFalse(is_valid("https://uci.edu/"))
+
+    def test_bad_path_traps_false(self):
+        self.assertFalse(is_valid("https://www.ics.uci.edu/tag/research"))
+        self.assertFalse(is_valid("https://www.ics.uci.edu/category/news"))
+        self.assertFalse(is_valid("https://www.ics.uci.edu/wp-json"))
+        self.assertFalse(is_valid("https://www.ics.uci.edu/search/results"))
+
+    def test_bad_query_traps_false(self):
+        self.assertFalse(is_valid("https://www.ics.uci.edu/page?replytocom=123"))
+        self.assertFalse(is_valid("https://www.ics.uci.edu/page?share=email"))
+        self.assertFalse(is_valid("https://www.ics.uci.edu/page?oldid=123"))
+        self.assertFalse(is_valid("https://www.ics.uci.edu/page?print=true"))
+        self.assertFalse(is_valid("https://www.ics.uci.edu/page?filter=name"))
 
 if __name__ == '__main__':
     unittest.main()

@@ -92,10 +92,6 @@ def scraper(url, resp):
         link
         for link in links
         if is_valid(link)
-        and (
-            "content-length" not in resp.raw_response.headers
-            or int(resp.raw_response.headers["content-length"]) < 250000
-        )
     ]
 
     # grab subdomain (no protocol) and unique pages within that domain
@@ -161,15 +157,16 @@ def is_valid(url):
             return False
 
         # Invalid if the netloc (sub/domain) doesn't contain any of the four valid ones
-        if not any(
-            parsed.netloc.endswith(domain)
-            for domain in [
-                ".ics.uci.edu",
-                ".cs.uci.edu",
-                ".informatics.uci.edu",
-                ".stat.uci.edu",
-            ]
-        ):
+        ALLOWED_DOMAINS = [
+            ".ics.uci.edu",
+            ".cs.uci.edu",
+            ".informatics.uci.edu",
+            ".stat.uci.edu",
+        ]
+
+        host = parsed.netloc.lower()
+
+        if not any(host.endswith(domain) for domain in ALLOWED_DOMAINS):
             return False
 
         # Avoiding large files with low information value
@@ -183,6 +180,28 @@ def is_valid(url):
 
         # Using unquote to decode URL-encoded characters enabling proper detection of invalid query parameters
         query = unquote(parsed.query).lower()
+
+        path = unquote(parsed.path).lower()
+
+        bad_path_parts = [
+            "/tag/", "/tags/", "/category/", "/author/",
+            "/wp-json", "/feed", "/rss",
+            "/calendar", "/events",
+            "/login", "/logout",
+            "/search",
+        ]
+
+        if any(x in path for x in bad_path_parts):
+            return False
+
+        bad_query_parts = [
+            "replytocom=", "share=", "ical=", "tribe_",
+            "version=", "history", "diff", "oldid=",
+            "print=", "view=", "sort=", "filter=",
+        ]
+
+        if any(x in query for x in bad_query_parts):
+            return False
 
         # Avoid DokuWiki tab pages, pages with dropdowns, directories
         if "idx=" in query:
