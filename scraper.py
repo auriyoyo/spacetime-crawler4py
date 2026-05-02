@@ -94,7 +94,7 @@ def scraper(url, resp):
         if is_valid(link)
         and (
             "content-length" not in resp.raw_response.headers
-            or int(resp.raw_response.headers["content-length"]) < 500000
+            or int(resp.raw_response.headers["content-length"]) < 250000
         )
     ]
 
