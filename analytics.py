@@ -6,7 +6,8 @@ import re
 # Used in scraper to record the number of times each word appears in the pages we crawl.
 word_counts = defaultdict(int)
 
-# subdomains tracks unique subdomains e.g. vision.ics.uci.edu
+# subdomains tracks unique subdomains e.g. vision.ics.uci.edu and then the specific
+# URLs that belong with that subdomain
 unique_subdomains = defaultdict(int)
 
 # STOP_WORDS is a set of common English words that will be ignored when counting word frequencies.
@@ -102,7 +103,8 @@ STOP_WORDS = {
 }
 
 
-# update_word_counts takes a list of words and updates the global word_counts dictionary with the counts of each word.
+# update_word_counts takes a list of words and updates the global 
+# word_counts dictionary with the counts of each word.
 def update_word_counts(words):
     for word in words:
         word_counts[word] += 1
@@ -128,7 +130,8 @@ def tokenize(text):
     return results_list
 
 
-# load_word_counts loads the word counts from a JSON file into the global word_counts dictionary.
+# load_word_counts loads the word counts from a JSON file into 
+# the global word_counts dictionary.
 def load_word_counts(filepath="word_counts.json"):
     global word_counts
     try:
@@ -144,12 +147,14 @@ def save_word_counts(filepath="word_counts.json"):
         json.dump(dict(word_counts), f)
 
 
-# get_top_50 returns a list of the top 50 most common words and their counts, sorted by count in descending order.
+# get_top_50 returns a list of the top 50 most common words and their 
+# counts, sorted by count in descending order.
 def get_top_50():
     return sorted(word_counts.items(), key=lambda x: x[1], reverse=True)[:50]
 
 
-# save_top_50 saves the top 50 most common words and their counts to a text file.
+# save_top_50 saves the top 50 most common words and their 
+# counts to a text file.
 def save_top_50(filepath="top_50.txt"):
     top_50 = get_top_50()
     with open(filepath, "w") as f:
@@ -157,39 +162,48 @@ def save_top_50(filepath="top_50.txt"):
             f.write(f"{word}: {count}\n")
 
 
-# longest_page is a dictionary that keeps track of the url that contains the most words and the word count of that page. 
+# longest_page is a dictionary that keeps track of the url 
+# that contains the most words and the word count of that page. 
 longest_page = {"url": "", "count": 0}
 
 
-# update_longest_page takes a url and a word count and updates longest_page
+# update_longest_page takes a url and a word count and 
+# updates longest_page if its longer
 def update_longest_page(url, word_count):
     if word_count > longest_page["count"]:
         longest_page["url"] = url
         longest_page["count"] = word_count
 
 
-# save_longest_page saves the longest page information to a text file
+# save_longest_page saves the longest page information 
+# to a text file
 def save_longest_page(filepath="longest_page.txt"):
     with open(filepath, "w") as f:
         f.write(f"URL: {longest_page['url']}\n")
         f.write(f"Word Count: {longest_page['count']}\n")
 
+# update_subdomain_dict takes the subdomain and the specfic URL to the
+# subdomain and adds it to the key-value list
 def update_subdomain_dict(subdomain, pages_in_subdomain) -> None:
     if subdomain not in unique_subdomains:
         unique_subdomains[subdomain] = set()
     unique_subdomains[subdomain].update(pages_in_subdomain) # adding all pages in subdomain set to remove the possibility of duplicates
 
-
+# get_unique_subdomain_count gives back the length of the
+# key-value list which is the subdomain count
 def get_unique_subdomain_count() -> int:
     return len(unique_subdomains)
 
-
+# get_unique_subdomain_with_unique_pages returns the format
+# that report.txt expects
 def get_unique_subdomain_with_unique_pages():
     for subdomain, pages in unique_subdomains.items():
         print(f"{subdomain}, {len(pages)}")
 
 
-# save_subdomain_and_counts saves the subdomain and count information to a text file
+# save_subdomain_and_counts saves the subdomain and count 
+# information to a text file
+# very similar to above
 def save_subdomain_and_counts(filepath="subdomain_and_counts.txt"):
     with open(filepath, "w") as f:
         for subdomain, pages in unique_subdomains.items():
@@ -206,7 +220,8 @@ def save_all(filepath_counts="word_counts.json", filepath_top50="top_50.txt"):
     save_longest_page()
     save_subdomain_and_counts()
 
-# Makes a page with a running average page size as the crawler crawls, for observation
+# Makes a page with a running average page size as the 
+# crawler crawls, for observation only
 def save_and_calc_avg_page_size(sum_bytes: int, pages_crawled: int):
     with open("avg_page_size", "w") as f:
         f.write(f"{sum_bytes / pages_crawled}\n")
@@ -219,12 +234,15 @@ def get_unique_pages():
     pattern = re.compile(r"Downloaded (\S+), status") # We're getting the URL in the log file
                                                       # \S+ gets all non-whitespace and we're
                                                       # looking between Downloaded and status
+                                                      # using regex 
     with open("./Logs/Worker.log", "r") as f:
         for line in f:
             match = re.search(pattern, line)
             
             if match:
                 unique_pages.add(match.group(1)) # not all lines in worker.log will have "Downloaded"
+                                                 # group 0 in regex is the entire string while group
+                                                 # 1 is the URL itself
             
     #print(f"Unique pages: {len(unique_pages)}")
     return len(unique_pages)

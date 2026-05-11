@@ -1,6 +1,8 @@
 from scraper import is_valid
 import unittest
 
+# unittests for the is_valid function and we are checking URLs like fragments and pdf URLs or the
+# events page we are purposely avoiding traps 
 class TestIsValid(unittest.TestCase):
 
     def test_normal_url_with_scheme(self):

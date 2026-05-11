@@ -13,28 +13,38 @@ from analytics import (
 )
 from bs4 import BeautifulSoup
 
+# meant for continuing word counts where we left off e.g. if the web crawler died
 load_word_counts()
+
 pages_crawled = 0
 sum_bytes = 0
 byte_pages = 0
 
-
+# scraper looks at the content of the URL and scrapes the content and gets the URLs to put into the
+# frontier. We also are validating that the URLs are not traps
 def scraper(url, resp):
+
+    # For reads python looks LEGB but for writes python doesnt do the look it assumes local 
+    # that's why we wanted global
     global pages_crawled
     global sum_bytes
     global byte_pages
 
-    # If error is that the content is too large, save its url and size to a text file for inspection
+    # If error is that the content is too large, save 
+    # its url and size to a text file for inspection for 
+    # if it run out of memory with content
     if resp.status == 607:
         with open("too_large.txt", "a") as f:
             f.write(f"{url}")
 
     # check for valid response, return empty list if not valid.
+    # error handling if problem with webpage
     if resp.status != 200 or not resp.raw_response or not resp.raw_response.content:
         if resp.error:
             print(f"Error crawling {url}: {resp.error}")
         return []
 
+    # HTML text extraction for things like the context and headers
     soup = BeautifulSoup(resp.raw_response.content, "lxml")
     # extract text from relevant tags and target main content only
     text = " ".join(
@@ -58,13 +68,18 @@ def scraper(url, resp):
         )
     )
 
-    # tokenize the text and filter out stop words and numeric tokens
+    # tokenize the text first and filter out stop words and numeric tokens
+    # after in the for-loop down there
     words = []
     all_words = tokenize(text)
 
-    #  If there are fewer than 50 words => low-information page => skip the analytics and return valid links to crawl next
+    #  If there are fewer than 50 words => low-information page so 
+    # skip the analytics and return valid links to crawl next
     if len(all_words) < 50:
         links = extract_next_links(url, resp)
+
+        # after all the links are extracted we run them through an 
+        # is valid check
         return [link for link in links if is_valid(link)]
 
     for w in all_words:
@@ -79,6 +94,8 @@ def scraper(url, resp):
     # update sum_bytes with the number of bytes in this page
     if "content-length" in resp.raw_response.headers:
         length = resp.raw_response.headers["content-length"]
+        
+        # these are used to find the average page size
         sum_bytes += int(length)
         byte_pages += 1
 
@@ -95,6 +112,8 @@ def scraper(url, resp):
     ]
 
     # grab subdomain (no protocol) and unique pages within that domain
+    # it's more accurate to say we grabbed the subdomain and then grabbed
+    # the real URL to put into a dictionary
     parsed = urlparse(url)
     update_subdomain_dict(f"{parsed.netloc}", [url])
 
@@ -102,7 +121,6 @@ def scraper(url, resp):
 
 
 def extract_next_links(url, resp):
-    # Implementation required.
     # url: the URL that was used to get the page
     # resp.url: the actual url of the page
     # resp.status: the status code returned by the server. 200 is OK, you got the page. Other numbers mean that there was some kind of problem.
@@ -112,51 +130,67 @@ def extract_next_links(url, resp):
     #         resp.raw_response.content: the content of the page!
     # Return a list with the hyperlinks (as strings) scrapped from resp.raw_response.content
 
-    # 1. Check if the response is actually valid before trying to extract links
+    # 1. Check if the response is actually valid before 
+    # trying to extract links
     if resp.status != 200 or not resp.raw_response or not resp.raw_response.content:
-        # If the status is not 200, print the error message to allow error checking on our side.
+        # If the status is not 200, print the error message 
         if resp.error:
             print(f"Error crawling {url}: {resp.error}")
         return []
 
-    # 1B. Check if the content type is HTML before trying to parse it
+    # Check if the content type is HTML before trying to parse it
     content_type = resp.raw_response.headers.get("Content-Type", "")
     if "text/html" not in content_type:
         return []
 
-    # 2. Parse the HTML content and extract links using BeautifulSoup
+    # Parse the HTML content and extract links using BeautifulSoup
+    # ignoring the context getting specially the <a> tag
     soup = BeautifulSoup(resp.raw_response.content, "lxml")
     links = []
 
     for tag in soup.find_all("a", href=True):
         href = tag["href"]
 
-        # 3. Convert relative URLs to absolute URLs
-        # 3B. Using try-catch to prevent urljoin from crashing on malformed hrefs
+        # Convert relative URLs to absolute URLs e.g. href="/about/us" to https://ics.uci.edu/about/us
+        # Using try-catch to prevent urljoin from crashing on malformed/broken hrefs
         try:
             absolute = urljoin(url, href)
-            # 4. Strip the fragment identifier (the part after '#') from the URL
+            
+            # Strip the fragment identifier (the part after '#') from the URL
+            # fragments do not make a URL unique it just teleports you to a part of the page
             parsed = urlparse(absolute)
             defragmented = urlunparse(parsed._replace(fragment=""))
             links.append(defragmented)
         except ValueError:
             # if a ValueError occurs, skip the link and continue the crawling process
+            # because its a really bad syntax error
             continue
 
-    # 5. Return the list of links
+    # 5. Return the list of links that the page had
     return links
 
 
+# Checks for traps which are URLs we manually blacklisted
+# Decide whether to crawl this url or not.
+# If you decide to crawl it, return True; otherwise return False.
+# There are already some conditions that return False.
+
+
+# traps include:
+# - URLs with query parameters ?do=media, ?do=edit, ?do=export_pdf
+# - Infinite redirect URLs
+# - Links to internal search bars like ICS displaying article results ?q=keyword+that+just+filters+nothing+new
+# - URL is used to insert dynamic content like a search page with ?page=1 all the way to ?page=infinity
+# - Infinite calendar pages
+# - Faulty links like pages that download PDFs we're downloading not displaying so nothing to index
 def is_valid(url):
-    # Decide whether to crawl this url or not.
-    # If you decide to crawl it, return True; otherwise return False.
-    # There are already some conditions that return False.
     try:
         parsed = urlparse(url)
         if parsed.scheme not in set(["http", "https"]):
             return False
 
-        # Invalid if the netloc (sub/domain) doesn't contain any of the four valid ones
+        # Invalid if the netloc (sub/domain) doesn't contain any 
+        # of the four valid ones
         ALLOWED_DOMAINS = [
             ".ics.uci.edu",
             ".cs.uci.edu",
@@ -164,25 +198,32 @@ def is_valid(url):
             ".stat.uci.edu",
         ]
 
+        # Get the subdomain and we just used the lower method to
+        # make URL string comparing easier
         host = parsed.netloc.lower()
 
         if not any(host.endswith(domain) for domain in ALLOWED_DOMAINS):
             return False
 
+
         # Avoiding large files with low information value
+        # just a bunch of numbers and data that is noise to the
+        # web crawler
         for ml_dataset in ["/datasets/", "/dataset/", "/ml/"]:
             if parsed.path.startswith(ml_dataset):
                 return False
 
-        # Avoiding calendars
+        # Avoiding calendars more noise
         if parsed.path.startswith("/events/") or parsed.path.startswith("/calendar/"):
             return False
 
-        # Using unquote to decode URL-encoded characters enabling proper detection of invalid query parameters
+        # Using unquote to decode URL-encoded characters enabling proper 
+        # detection of invalid query parameters
+        # e.g. /%63%61%6c%65%6e%64%61%72/ means /calendar/
         query = unquote(parsed.query).lower()
-
         path = unquote(parsed.path).lower()
 
+        # invalid if a trap
         bad_path_parts = [
             "/tag/", "/tags/", "/category/", "/author/",
             "/wp-json", "/feed", "/rss",
@@ -194,6 +235,7 @@ def is_valid(url):
         if any(x in path for x in bad_path_parts):
             return False
 
+        # invalid if a trap
         bad_query_parts = [
             "replytocom=", "share=", "ical=", "tribe_",
             "version=", "history", "diff", "oldid=",
@@ -260,6 +302,7 @@ def is_valid(url):
         if "/login" in parsed.path:
             return False
 
+        # filtering useless pages like student code or pds or images
         return not re.match(
             r".*\.(css|js|bmp|gif|jpe?g|ico"
             + r"|png|tiff?|mid|mp2|mp3|mp4"
@@ -276,7 +319,7 @@ def is_valid(url):
             parsed.path.lower(),
         )
 
-
+    # raise bad URLs in a way we couldn't handle
     except TypeError:
         print("TypeError for ", parsed)
         raise

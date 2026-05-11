@@ -7,6 +7,8 @@ from crawler import Crawler
 
 
 def main(config_file, restart):
+    # read config file with seed URLs and get to the cache server
+    # then start the web crawler
     cparser = ConfigParser()
     cparser.read(config_file)
     config = Config(cparser)
@@ -16,6 +18,7 @@ def main(config_file, restart):
 
 
 if __name__ == "__main__":
+    # parse program arguments
     parser = ArgumentParser()
     parser.add_argument("--restart", action="store_true", default=False)
     parser.add_argument("--config_file", type=str, default="config.ini")

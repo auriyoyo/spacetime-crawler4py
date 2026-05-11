@@ -6,7 +6,8 @@ from utils import get_logger
 import scraper
 import time
 
-
+# while True loop that does the crawling until there is nothing left in the 
+# frontier to crawl
 class Worker(Thread):
     def __init__(self, worker_id, config, frontier):
         self.logger = get_logger(f"Worker-{worker_id}", "Worker")
